@@ -1,0 +1,113 @@
+package com.pedropathing.BotFactory.Servo;
+
+import android.graphics.Bitmap;
+
+import androidx.annotation.NonNull;
+
+import com.pedropathing.BotFactory.ConfigDirectionPair;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import static com.pedropathing.BotFactory.Servo.Action.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
+
+public class  ServoFactory {
+    private final ArrayList<Servo> ControlServo= new ArrayList<>();
+    private final int ServoNum;
+    private final ArrayList<ConfigDirectionPair> Config;
+    private final Map<Action, Double> ServoAction;
+    private static HardwareMap hardwareMap;
+    private static Action ServoState = Init;
+    private ServoFactory(@NonNull ServoBuilder Builder){
+        ServoNum=Builder.servoName.size();
+        this.ServoAction = Collections.unmodifiableMap(new HashMap<>(Builder.actionMap));
+        Config = new ArrayList<>(Builder.servoName);
+        for(int i = 0;i < ServoNum;i++){
+            ControlServo.add(hardwareMap.get(Servo.class,Config.get(i).getConfig()));
+            if(Config.get(i).isReverse()){
+                ControlServo.get(i).setDirection(Servo.Direction.REVERSE);
+            }
+        }
+    }
+    public void Init(){
+        for(int i = 0;i < ServoNum; i++){
+            ControlServo.get(i).setPosition(ServoAction.get(Init));
+        }
+        ServoState = Init;
+    }
+    public void act(Action thisAction){
+        if(!ServoAction.containsKey(thisAction)) {
+            throw new NullPointerException("You used a fucking action that you didn't fucking told me!(｀Д´)");
+        }
+        for (int i = 0; i < ServoNum; i++) {
+            ControlServo.get(i).setPosition(ServoAction.get(thisAction));
+        }
+        ServoState=thisAction;
+    }
+    public Action getState(){
+        return ServoState;
+    }
+    public String getConfig(int i){
+        if(i>=ServoNum){
+            throw new IllegalArgumentException("Are you kidding me? I can't tell you a fucking servo name more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+        }
+        return Config.get(i).getConfig();
+    }
+    public boolean whichIsReversed(int i){
+        if(i>=ServoNum){
+            throw new IllegalArgumentException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+        }
+        return Config.get(i).isReverse();
+    }
+    public static class ServoBuilder {
+        private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
+        private final Map<Action, Double> actionMap;
+
+        public ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse) {
+            this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
+            this.actionMap = new HashMap<>();
+            this.actionMap.put(Init,InitPosition);
+        }
+
+        /**
+         *给这个封装添加一个新的同步舵机
+         *
+         * @param newConfigName 添加舵机的名称
+         * @param isReverse 是否反向
+         * @return 当前Builder实例，实现链式调用
+         */
+        public ServoBuilder addServo(String newConfigName,boolean isReverse){
+            servoName.add(new ConfigDirectionPair(newConfigName,isReverse));
+            return this;
+        }
+
+        /**
+         * 添加一个动作及其对应的Servo位置。
+         *
+         * @param actionType 动作的枚举类型
+         * @param position   Servo的目标位置 (通常0.0到1.0之间)
+         * @return 当前Builder实例，实现链式调用
+         */
+        public ServoBuilder addAction(Action actionType, double position) {
+            if (position < 0.0 || position > 1.0) {
+                throw new IllegalArgumentException("Servo position must be between 0.0 and 1.0");
+            }
+            actionMap.put(actionType, position);
+            return this;
+        }
+
+        /**
+         * 构建并返回一个 ServoFactory 实例。
+         *
+         * @return 构建好的 ServoFactory 对象
+         */
+        public ServoFactory build() {
+            return new ServoFactory(this);
+        }
+    }
+}
