@@ -67,13 +67,12 @@ public class  ServoFactory {
         private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
         private final Map<Action, Double> actionMap;
         private final HardwareMap hardwareMap;
-        public ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
-            this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
+        private ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
+            this.servoName.add(new ConfigDirectionPair(ConfigName1, isReverse));
             this.actionMap = new HashMap<>();
-            this.actionMap.put(Init,InitPosition);
+            this.actionMap.put(Init, InitPosition);
             this.hardwareMap = hardwareMap;
         }
-
         /**
          *给这个封装添加一个新的同步舵机
          *

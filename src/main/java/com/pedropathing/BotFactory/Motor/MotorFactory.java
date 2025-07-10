@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import static com.pedropathing.BotFactory.Action.*;
 
@@ -52,7 +51,7 @@ public class  MotorFactory {
             ControlMotor.get(i).setTargetPosition(MotorAction.get(thisAction));
             ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
-        MotorState=thisAction;
+        MotorState =thisAction;
     }
     public Action getState(){
         return MotorState;
