@@ -1,9 +1,12 @@
-package com.pedropathing.BotFactory.Servo;
+package com.pedropathing.BotFactory.Motor;
 
 import androidx.annotation.NonNull;
 
 import com.pedropathing.BotFactory.Action;
 import com.pedropathing.BotFactory.ConfigDirectionPair;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -14,60 +17,63 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class  ServoFactory {
-    private final ArrayList<Servo> ControlServo= new ArrayList<>();
-    private final int ServoNum;
+public class  MotorFactory {
+    private final ArrayList<DcMotorEx> ControlMotor= new ArrayList<>();
+    private final int MotorNum;
     private final ArrayList<ConfigDirectionPair> Config;
-    private final Map<Action, Double> ServoAction;
+    private final Map<Action, Integer> MotorAction;
     protected static HardwareMap hardwareMap;
-    private static Action ServoState = Init;
-    private ServoFactory(@NonNull ServoBuilder Builder){
-        ServoNum=Builder.servoName.size();
+    private static Action MotorState = Init;
+    private MotorFactory(@NonNull MotorBuilder Builder){
+        MotorNum=Builder.servoName.size();
         hardwareMap = Builder.hardwareMap;
-        this.ServoAction = Collections.unmodifiableMap(new HashMap<>(Builder.actionMap));
+        this.MotorAction = Collections.unmodifiableMap(new HashMap<>(Builder.actionMap));
         Config = new ArrayList<>(Builder.servoName);
-        for(int i = 0;i < ServoNum;i++){
-            ControlServo.add(hardwareMap.get(Servo.class,Config.get(i).getConfig()));
+        for(int i = 0;i < MotorNum;i++){
+            ControlMotor.add(hardwareMap.get(DcMotorEx.class,Config.get(i).getConfig()));
             if(Config.get(i).isReverse()){
-                ControlServo.get(i).setDirection(Servo.Direction.REVERSE);
+                ControlMotor.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
             }
         }
     }
     public void Init(){
-        for(int i = 0;i < ServoNum; i++){
-            ControlServo.get(i).setPosition(ServoAction.get(Init));
+        for(int i = 0;i < MotorNum; i++){
+            ControlMotor.get(i).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            ControlMotor.get(i).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
-        ServoState = Init;
+        MotorState = Init;
     }
     public void act(Action thisAction){
-        if(!ServoAction.containsKey(thisAction)) {
+        if(!MotorAction.containsKey(thisAction)) {
             throw new NullPointerException("You used a fucking action that you didn't fucking told me!(｀Д´)");
         }
-        for (int i = 0; i < ServoNum; i++) {
-            ControlServo.get(i).setPosition(ServoAction.get(thisAction));
+        for (int i = 0; i < MotorNum; i++) {
+            ControlMotor.get(i).setTargetPosition(MotorAction.get(thisAction));
+            ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
-        ServoState=thisAction;
+        MotorState=thisAction;
     }
     public Action getState(){
-        return ServoState;
+        return MotorState;
     }
     public String getConfig(int i){
-        if(i>=ServoNum){
-            throw new IllegalArgumentException("Are you kidding me? I can't tell you a fucking servo name more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+        if(i>=MotorNum){
+            throw new IllegalArgumentException("Are you kidding me? I can't tell you a fucking servo name more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).getConfig();
     }
     public boolean whichIsReversed(int i){
-        if(i>=ServoNum){
-            throw new IllegalArgumentException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+        if(i>=MotorNum){
+            throw new IllegalArgumentException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).isReverse();
     }
-    public static class ServoBuilder {
+    public static class MotorBuilder {
         private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
-        private final Map<Action, Double> actionMap;
+        private final Map<Action, Integer> actionMap;
         private final HardwareMap hardwareMap;
-        public ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
+        public MotorBuilder(String ConfigName1,int InitPosition,boolean isReverse,HardwareMap hardwareMap) {
             this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
             this.actionMap = new HashMap<>();
             this.actionMap.put(Init,InitPosition);
@@ -81,7 +87,7 @@ public class  ServoFactory {
          * @param isReverse 是否反向
          * @return 当前Builder实例，实现链式调用
          */
-        public ServoBuilder addServo(String newConfigName,boolean isReverse){
+        public MotorBuilder addServo(String newConfigName,boolean isReverse){
             servoName.add(new ConfigDirectionPair(newConfigName,isReverse));
             return this;
         }
@@ -93,10 +99,7 @@ public class  ServoFactory {
          * @param position   Servo的目标位置 (通常0.0到1.0之间)
          * @return 当前Builder实例，实现链式调用
          */
-        public ServoBuilder addAction(Action actionType, double position) {
-            if (position < 0.0 || position > 1.0) {
-                throw new IllegalArgumentException("Servo position must be between 0.0 and 1.0");
-            }
+        public MotorBuilder addAction(Action actionType, int position) {
             actionMap.put(actionType, position);
             return this;
         }
@@ -106,8 +109,8 @@ public class  ServoFactory {
          *
          * @return 构建好的 ServoFactory 对象
          */
-        public ServoFactory build() {
-            return new ServoFactory(this);
+        public MotorFactory build() {
+            return new MotorFactory(this);
         }
     }
 }
