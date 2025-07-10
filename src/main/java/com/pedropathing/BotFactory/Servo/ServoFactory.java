@@ -67,7 +67,7 @@ public class  ServoFactory {
         private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
         private final Map<Action, Double> actionMap;
         private final HardwareMap hardwareMap;
-        private ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
+        public ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
             this.servoName.add(new ConfigDirectionPair(ConfigName1, isReverse));
             this.actionMap = new HashMap<>();
             this.actionMap.put(Init, InitPosition);

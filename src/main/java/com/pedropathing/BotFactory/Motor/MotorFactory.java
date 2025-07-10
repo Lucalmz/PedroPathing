@@ -23,7 +23,7 @@ public class  MotorFactory {
     private final Map<Action, Integer> MotorAction;
     protected static HardwareMap hardwareMap;
     private static Action MotorState = Init;
-    private MotorFactory(@NonNull MotorBuilder Builder){
+    public MotorFactory(@NonNull MotorBuilder Builder){
         MotorNum=Builder.servoName.size();
         hardwareMap = Builder.hardwareMap;
         this.MotorAction = Collections.unmodifiableMap(new HashMap<>(Builder.actionMap));
