@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.pedropathing.BotFactory.Action;
 import com.pedropathing.BotFactory.ConfigDirectionPair;
+import com.pedropathing.BotFactory.SwitcherPair;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -22,7 +23,9 @@ public class  MotorFactory {
     private final ArrayList<ConfigDirectionPair> Config;
     private final Map<Action, Integer> MotorAction;
     protected static HardwareMap hardwareMap;
-    private static Action MotorState = Init;
+    private Action MotorState = Init;
+    private final SwitcherPair switcher;
+    private boolean isSwitcherAssigned;
     public MotorFactory(@NonNull MotorBuilder Builder){
         MotorNum=Builder.servoName.size();
         hardwareMap = Builder.hardwareMap;
@@ -34,6 +37,8 @@ public class  MotorFactory {
                 ControlMotor.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
             }
         }
+        isSwitcherAssigned = Builder.isSwitcherSet;
+        switcher = Builder.switcher;
     }
     public void Init(){
         for(int i = 0;i < MotorNum; i++){
@@ -45,7 +50,7 @@ public class  MotorFactory {
     }
     public void act(Action thisAction){
         if(!MotorAction.containsKey(thisAction)) {
-            throw new NullPointerException("You used a fucking action that you didn't fucking told me!(｀Д´)");
+            throw new IllegalArgumentException("You used a fucking action that you didn't fucking told me!(｀Д´)");
         }
         for (int i = 0; i < MotorNum; i++) {
             ControlMotor.get(i).setTargetPosition(MotorAction.get(thisAction));
@@ -53,18 +58,35 @@ public class  MotorFactory {
         }
         MotorState =thisAction;
     }
+    public void Switch(){
+        if(isSwitcherAssigned){
+            if(MotorState==switcher.getSwitch1()){
+                for (int i = 0; i < MotorNum; i++) {
+                    ControlMotor.get(i).setTargetPosition(MotorAction.get(switcher.getSwitch2()));
+                    ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }else {
+                for (int i = 0; i < MotorNum; i++) {
+                    ControlMotor.get(i).setTargetPosition(MotorAction.get(switcher.getSwitch1()));
+                    ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }
+        }else {
+            throw new IllegalArgumentException("You haven't assigned a switcher for those motors.");
+        }
+    }
     public Action getState(){
         return MotorState;
     }
     public String getConfig(int i){
         if(i>=MotorNum){
-            throw new IllegalArgumentException("Are you kidding me? I can't tell you a fucking servo name more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
+            throw new ArrayIndexOutOfBoundsException("Are you kidding me? I can't tell you a fucking servo name more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).getConfig();
     }
     public boolean whichIsReversed(int i){
         if(i>=MotorNum){
-            throw new IllegalArgumentException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
+            throw new ArrayIndexOutOfBoundsException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(MotorNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).isReverse();
     }
@@ -72,6 +94,8 @@ public class  MotorFactory {
         private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
         private final Map<Action, Integer> actionMap;
         private final HardwareMap hardwareMap;
+        private SwitcherPair switcher;
+        private boolean isSwitcherSet;
         public MotorBuilder(String ConfigName1,int InitPosition,boolean isReverse,HardwareMap hardwareMap) {
             this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
             this.actionMap = new HashMap<>();
@@ -104,11 +128,29 @@ public class  MotorFactory {
         }
 
         /**
+         * 设置电机switch方法（只能调用一遍）
+         * @param switch1 设置第一个switch动作（所有其他位置时调用switch都会切到该位置）
+         * @param switch2 设置第二个switch动作
+         * @return 当前Builder实例，实现链式调用
+         */
+        public MotorBuilder setSwitcher(Action switch1,Action switch2){
+            if(isSwitcherSet){
+                throw new IllegalArgumentException("Switcher should only be assigned for once.");
+            }
+            switcher = SwitcherPair.GetSwitcherPair(switch1,switch2);
+            isSwitcherSet = true;
+            return this;
+        }
+
+        /**
          * 构建并返回一个 ServoFactory 实例。
          *
          * @return 构建好的 ServoFactory 对象
          */
         public MotorFactory build() {
+            if(!isSwitcherSet){
+                switcher = SwitcherPair.GetSwitcherPair(null,null);
+            }
             return new MotorFactory(this);
         }
     }

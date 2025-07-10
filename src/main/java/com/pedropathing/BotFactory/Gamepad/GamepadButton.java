@@ -17,7 +17,7 @@ public class GamepadButton {
         this.previousPressed = this.nowPressed;
         this.nowPressed = CurrentState;
     }
-    public boolean justPressed(){
+    public boolean Pressed(){
         ButtonTimer.reset();
         return nowPressed&&!previousPressed;
     }

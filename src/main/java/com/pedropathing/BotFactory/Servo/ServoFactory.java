@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.pedropathing.BotFactory.Action;
 import com.pedropathing.BotFactory.ConfigDirectionPair;
+import com.pedropathing.BotFactory.SwitcherPair;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -19,8 +20,10 @@ public class  ServoFactory {
     private final int ServoNum;
     private final ArrayList<ConfigDirectionPair> Config;
     private final Map<Action, Double> ServoAction;
+    private final SwitcherPair switcher;
     protected static HardwareMap hardwareMap;
-    private static Action ServoState = Init;
+    private Action ServoState = Init;
+    private boolean isSwitcherAssigned = false;
     private ServoFactory(@NonNull ServoBuilder Builder){
         ServoNum=Builder.servoName.size();
         hardwareMap = Builder.hardwareMap;
@@ -32,6 +35,8 @@ public class  ServoFactory {
                 ControlServo.get(i).setDirection(Servo.Direction.REVERSE);
             }
         }
+        isSwitcherAssigned = Builder.isSwitcherSet;
+        switcher = Builder.switcher;
     }
     public void Init(){
         for(int i = 0;i < ServoNum; i++){
@@ -41,25 +46,40 @@ public class  ServoFactory {
     }
     public void act(Action thisAction){
         if(!ServoAction.containsKey(thisAction)) {
-            throw new NullPointerException("You used a fucking action that you didn't fucking told me!(｀Д´)");
+            throw new IllegalArgumentException("You used a fucking action that you didn't fucking told me!(｀Д´)");
         }
         for (int i = 0; i < ServoNum; i++) {
             ControlServo.get(i).setPosition(ServoAction.get(thisAction));
         }
         ServoState=thisAction;
     }
+    public void Switch(){
+        if(isSwitcherAssigned){
+            if(ServoState==switcher.getSwitch1()){
+                for (int i = 0; i < ServoNum; i++) {
+                    ControlServo.get(i).setPosition(ServoAction.get(switcher.getSwitch2()));
+                }
+            }else {
+                for (int i = 0; i < ServoNum; i++) {
+                    ControlServo.get(i).setPosition(ServoAction.get(switcher.getSwitch1()));
+                }
+            }
+        }else {
+            throw new IllegalArgumentException("You haven't assigned a switcher for this servo.");
+        }
+    }
     public Action getState(){
         return ServoState;
     }
     public String getConfig(int i){
         if(i>=ServoNum){
-            throw new IllegalArgumentException("Are you kidding me? I can't tell you a fucking servo name more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+            throw new ArrayIndexOutOfBoundsException("Are you kidding me? I can't tell you a fucking servo name more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).getConfig();
     }
     public boolean whichIsReversed(int i){
         if(i>=ServoNum){
-            throw new IllegalArgumentException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
+            throw new ArrayIndexOutOfBoundsException("Are you fucking kidding me? I can't tell you a fucking servo whether it is reversed more than"+(ServoNum-1)+", but you asked me to tell you the "+i+"one!");
         }
         return Config.get(i).isReverse();
     }
@@ -67,6 +87,8 @@ public class  ServoFactory {
         private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
         private final Map<Action, Double> actionMap;
         private final HardwareMap hardwareMap;
+        private SwitcherPair switcher;
+        private boolean isSwitcherSet;
         public ServoBuilder(String ConfigName1,double InitPosition,boolean isReverse,HardwareMap hardwareMap) {
             this.servoName.add(new ConfigDirectionPair(ConfigName1, isReverse));
             this.actionMap = new HashMap<>();
@@ -101,11 +123,27 @@ public class  ServoFactory {
         }
 
         /**
+         *设置便捷转换方式
+         * @param switch1 第一个switch需要的动作(任意位置只要调用switch就会回到该位置）
+         * @param switch2 第二个switch需要的动作
+         * @return 当前Builder实例，实现链式调用
+         */
+        public ServoBuilder setSwitcher(Action switch1,Action switch2){
+            if(isSwitcherSet){
+                throw new IllegalArgumentException("Switcher should only be assigned for once.");
+            }
+            switcher = SwitcherPair.GetSwitcherPair(switch1,switch2);
+            isSwitcherSet = true;
+            return this;
+        }
+        /**
          * 构建并返回一个 ServoFactory 实例。
-         *
          * @return 构建好的 ServoFactory 对象
          */
         public ServoFactory build() {
+            if(!isSwitcherSet){
+                switcher = SwitcherPair.GetSwitcherPair(null,null);
+            }
             return new ServoFactory(this);
         }
     }
