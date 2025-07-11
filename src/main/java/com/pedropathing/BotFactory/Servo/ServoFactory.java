@@ -44,6 +44,12 @@ public class  ServoFactory {
         }
         ServoState = Init;
     }
+    public void SetTemporaryPosition(double TemporaryPosition){
+        for(int i = 0;i < ServoNum; i++){
+            ControlServo.get(i).setPosition(TemporaryPosition);
+        }
+        ServoState = InTemporary;
+    }
     public void act(Action thisAction){
         if(!ServoAction.containsKey(thisAction)) {
             throw new IllegalArgumentException("You used a fucking action that you didn't fucking told me!(｀Д´)");

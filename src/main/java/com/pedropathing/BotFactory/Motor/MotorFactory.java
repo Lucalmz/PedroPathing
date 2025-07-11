@@ -23,9 +23,10 @@ public class  MotorFactory {
     private final ArrayList<ConfigDirectionPair> Config;
     private final Map<Action, Integer> MotorAction;
     protected static HardwareMap hardwareMap;
+    private final Map<Action,Action> SwitcherLink;
     private Action MotorState = Init;
     private final SwitcherPair switcher;
-    private boolean isSwitcherAssigned;
+    private final boolean isSwitcherAssigned;
     public MotorFactory(@NonNull MotorBuilder Builder){
         MotorNum=Builder.servoName.size();
         hardwareMap = Builder.hardwareMap;
@@ -37,6 +38,7 @@ public class  MotorFactory {
                 ControlMotor.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
             }
         }
+        SwitcherLink = Builder.switcherLinkArrayList;
         isSwitcherAssigned = Builder.isSwitcherSet;
         switcher = Builder.switcher;
     }
@@ -58,7 +60,21 @@ public class  MotorFactory {
         }
         MotorState =thisAction;
     }
+    public void setTemporaryPosition(int TemporaryPosition){
+        for (int i = 0; i < MotorNum; i++) {
+            ControlMotor.get(i).setTargetPosition(TemporaryPosition);
+            ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+        MotorState = InTemporary;
+    }
     public void Switch(){
+        if(SwitcherLink.containsKey(MotorState)){
+            for (int i = 0; i < MotorNum; i++) {
+                ControlMotor.get(i).setTargetPosition(MotorAction.get(SwitcherLink.get(MotorState)));
+                ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+            return;
+        }
         if(isSwitcherAssigned){
             if(MotorState==switcher.getSwitch1()){
                 for (int i = 0; i < MotorNum; i++) {
@@ -95,6 +111,7 @@ public class  MotorFactory {
         private final Map<Action, Integer> actionMap;
         private final HardwareMap hardwareMap;
         private SwitcherPair switcher;
+        private Map<Action,Action> switcherLinkArrayList;
         private boolean isSwitcherSet;
         public MotorBuilder(String ConfigName1,int InitPosition,boolean isReverse,HardwareMap hardwareMap) {
             this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
@@ -139,6 +156,17 @@ public class  MotorFactory {
             }
             switcher = SwitcherPair.GetSwitcherPair(switch1,switch2);
             isSwitcherSet = true;
+            return this;
+        }
+
+        /**
+         *设置优先连接的switch方法
+         * @param LinkAction1 第一个互联的动作
+         * @param LinkAction2 第二个互联的动作
+         * @return 当前Builder实例，实现链式调用
+         */
+        public MotorBuilder setSwitcherLink(Action LinkAction1,Action LinkAction2){
+            switcherLinkArrayList.put(LinkAction1,LinkAction2);
             return this;
         }
 

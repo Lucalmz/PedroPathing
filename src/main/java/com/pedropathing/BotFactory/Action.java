@@ -10,5 +10,6 @@ public enum Action {
     Launch,Home,Default,
     Start,Stop,
     PutDown,Set,Reset,
-    Forward,Reverse,Backward
+    Forward,Reverse,Backward,
+    InTemporary
 }
