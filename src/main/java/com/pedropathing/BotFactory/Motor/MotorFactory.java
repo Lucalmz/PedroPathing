@@ -28,10 +28,10 @@ public class  MotorFactory {
     private final SwitcherPair switcher;
     private final boolean isSwitcherAssigned;
     public MotorFactory(@NonNull MotorBuilder Builder){
-        MotorNum=Builder.servoName.size();
+        MotorNum=Builder.MotorName.size();
         hardwareMap = Builder.hardwareMap;
         this.MotorAction = Collections.unmodifiableMap(new HashMap<>(Builder.actionMap));
-        Config = new ArrayList<>(Builder.servoName);
+        Config = new ArrayList<>(Builder.MotorName);
         for(int i = 0;i < MotorNum;i++){
             ControlMotor.add(hardwareMap.get(DcMotorEx.class,Config.get(i).getConfig()));
             if(Config.get(i).isReverse()){
@@ -59,6 +59,12 @@ public class  MotorFactory {
             ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
         MotorState =thisAction;
+    }
+    public void setPower(double Power){
+        for (int i = 0; i < MotorNum; i++) {
+            ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            ControlMotor.get(i).setPower(Power);
+        }
     }
     public void setTemporaryPosition(int TemporaryPosition){
         for (int i = 0; i < MotorNum; i++) {
@@ -107,33 +113,33 @@ public class  MotorFactory {
         return Config.get(i).isReverse();
     }
     public static class MotorBuilder {
-        private final ArrayList<ConfigDirectionPair> servoName = new ArrayList<>();
+        private final ArrayList<ConfigDirectionPair> MotorName = new ArrayList<>();
         private final Map<Action, Integer> actionMap;
         private final HardwareMap hardwareMap;
         private SwitcherPair switcher;
         private Map<Action,Action> switcherLinkArrayList;
         private boolean isSwitcherSet;
         public MotorBuilder(String ConfigName1,int InitPosition,boolean isReverse,HardwareMap hardwareMap) {
-            this.servoName.add(new ConfigDirectionPair(ConfigName1,isReverse));
+            this.MotorName.add(new ConfigDirectionPair(ConfigName1,isReverse));
             this.actionMap = new HashMap<>();
             this.actionMap.put(Init,InitPosition);
             this.hardwareMap = hardwareMap;
         }
 
         /**
-         *给这个封装添加一个新的同步舵机
+         *给这个封装添加一个新的同步电机
          *
-         * @param newConfigName 添加舵机的名称
+         * @param newConfigName 添加电机的名称
          * @param isReverse 是否反向
          * @return 当前Builder实例，实现链式调用
          */
-        public MotorBuilder addServo(String newConfigName,boolean isReverse){
-            servoName.add(new ConfigDirectionPair(newConfigName,isReverse));
+        public MotorBuilder addMotor(String newConfigName,boolean isReverse){
+            MotorName.add(new ConfigDirectionPair(newConfigName,isReverse));
             return this;
         }
 
         /**
-         * 添加一个动作及其对应的Servo位置。
+         * 添加一个动作及其对应的Motor位置。
          *
          * @param actionType 动作的枚举类型
          * @param position   Servo的目标位置 (通常0.0到1.0之间)
