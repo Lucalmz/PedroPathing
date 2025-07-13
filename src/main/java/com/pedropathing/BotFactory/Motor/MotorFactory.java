@@ -57,6 +57,7 @@ public class  MotorFactory {
         for (int i = 0; i < MotorNum; i++) {
             ControlMotor.get(i).setTargetPosition(MotorAction.get(thisAction));
             ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            ControlMotor.get(i).setPower(1);
         }
         MotorState =thisAction;
     }
@@ -79,6 +80,7 @@ public class  MotorFactory {
                 ControlMotor.get(i).setTargetPosition(MotorAction.get(SwitcherLink.get(MotorState)));
                 ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
+            MotorState = SwitcherLink.get(MotorState);
             return;
         }
         if(isSwitcherAssigned){
@@ -87,11 +89,13 @@ public class  MotorFactory {
                     ControlMotor.get(i).setTargetPosition(MotorAction.get(switcher.getSwitch2()));
                     ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
+                MotorState = switcher.getSwitch2();
             }else {
                 for (int i = 0; i < MotorNum; i++) {
                     ControlMotor.get(i).setTargetPosition(MotorAction.get(switcher.getSwitch1()));
                     ControlMotor.get(i).setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
+                MotorState = switcher.getSwitch1();
             }
         }else {
             throw new IllegalArgumentException("You haven't assigned a switcher for those motors.");

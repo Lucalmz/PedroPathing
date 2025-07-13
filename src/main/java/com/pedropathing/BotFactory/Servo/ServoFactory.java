@@ -65,10 +65,12 @@ public class  ServoFactory {
                 for (int i = 0; i < ServoNum; i++) {
                     ControlServo.get(i).setPosition(ServoAction.get(switcher.getSwitch2()));
                 }
+                ServoState = switcher.getSwitch2();
             }else {
                 for (int i = 0; i < ServoNum; i++) {
                     ControlServo.get(i).setPosition(ServoAction.get(switcher.getSwitch1()));
                 }
+                ServoState = switcher.getSwitch1();
             }
         }else {
             throw new IllegalArgumentException("You haven't assigned a switcher for this servo.");

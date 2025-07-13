@@ -66,10 +66,12 @@ public class  CRServoFactory {
                 for (int i = 0; i < ServoNum; i++) {
                     ControlServo.get(i).setPower(ServoAction.get(switcher.getSwitch2()));
                 }
+                ServoState = switcher.getSwitch2();
             }else {
                 for (int i = 0; i < ServoNum; i++) {
                     ControlServo.get(i).setPower(ServoAction.get(switcher.getSwitch1()));
                 }
+                ServoState = switcher.getSwitch1();
             }
         }else {
             throw new IllegalArgumentException("You haven't assigned a switcher for this servo.");
@@ -122,8 +124,8 @@ public class  CRServoFactory {
          * @return 当前Builder实例，实现链式调用
          */
         public ServoBuilder addAction(Action actionType, double position) {
-            if (position < 0.0 || position > 1.0) {
-                throw new IllegalArgumentException("Servo position must be between 0.0 and 1.0");
+            if (Math.abs(position)>1) {
+                throw new IllegalArgumentException("Servo position must be between -1.0 and 1.0");
             }
             actionMap.put(actionType, position);
             return this;
