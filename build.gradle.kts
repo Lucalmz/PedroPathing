@@ -48,9 +48,8 @@ repositories {
 	google()
 	maven("https://maven.brott.dev/")
 }
-
 android {
-	namespace = "com.pedropathing.pedropathing"
+	namespace = "io.github.bear27570.PedroPathing"
 	compileSdk = 32
 
 	compileOptions {
@@ -74,11 +73,11 @@ android {
 }
 
 dependencies {
-	compileOnly("org.firstinspires.ftc:RobotCore:10.2.0")
-	compileOnly("org.firstinspires.ftc:Hardware:10.2.0")
-	compileOnly("org.firstinspires.ftc:FtcCommon:10.2.0")
-	compileOnly("org.firstinspires.ftc:RobotServer:10.2.0")
-	compileOnly("org.firstinspires.ftc:OnBotJava:10.2.0")
+	compileOnly("org.firstinspires.ftc:RobotCore:10.3.0")
+	compileOnly("org.firstinspires.ftc:Hardware:10.3.0")
+	compileOnly("org.firstinspires.ftc:FtcCommon:10.3.0")
+	compileOnly("org.firstinspires.ftc:RobotServer:10.3.0")
+	compileOnly("org.firstinspires.ftc:OnBotJava:10.3.0")
 	compileOnly("com.acmerobotics.dashboard:dashboard:0.4.16")
 
 	implementation("org.apache.commons:commons-math3:3.6.1")
@@ -91,9 +90,9 @@ dependencies {
 publishing {
 	publications {
 		register<MavenPublication>("release") {
-			groupId = "com.pedropathing"
+			groupId = "io.github.bear27570"
 			artifactId = "pedro"
-			version = "1.0.9"
+			version = "1.0.9.1"
 
 			afterEvaluate {
 				from(components["release"])

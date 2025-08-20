@@ -75,6 +75,7 @@ import java.util.List;
  */
 @Config
 public class Follower {
+    private static volatile Follower INSTANCE;
     private HardwareMap hardwareMap;
 
     private DcMotorEx leftFront;
@@ -179,7 +180,7 @@ public class Follower {
      * This creates a new Follower given a HardwareMap.
      * @param hardwareMap HardwareMap required
      */
-    public Follower(HardwareMap hardwareMap, Class<?> FConstants, Class<?> LConstants) {
+    private Follower(HardwareMap hardwareMap, Class<?> FConstants, Class<?> LConstants) {
         this.hardwareMap = hardwareMap;
         setupConstants(FConstants, LConstants);
         initialize();
@@ -190,12 +191,32 @@ public class Follower {
      * @param hardwareMap HardwareMap required
      * @param localizer the localizer you wish to use
      */
-    public Follower(HardwareMap hardwareMap, Localizer localizer, Class<?> FConstants, Class<?> LConstants) {
+    private Follower(HardwareMap hardwareMap, Localizer localizer, Class<?> FConstants, Class<?> LConstants) {
         this.hardwareMap = hardwareMap;
         setupConstants(FConstants, LConstants);
         initialize(localizer);
     }
 
+    public static Follower getInstance(HardwareMap hardwareMap, Localizer localizer, Class<?> FConstants, Class<?> LConstants) {
+        if(INSTANCE==null){
+            synchronized (Follower.class){
+                if(INSTANCE==null){
+                    INSTANCE=new Follower(hardwareMap,localizer,FConstants,LConstants);
+                }
+            }
+        }
+        return INSTANCE;
+    }
+    public static Follower getInstance(HardwareMap hardwareMap, Class<?> FConstants, Class<?> LConstants) {
+        if(INSTANCE==null){
+            synchronized (Follower.class){
+                if(INSTANCE==null){
+                    INSTANCE=new Follower(hardwareMap,FConstants,LConstants);
+                }
+            }
+        }
+        return INSTANCE;
+    }
     /**
      * Setup constants for the Follower.
      * @param FConstants the constants for the Follower
